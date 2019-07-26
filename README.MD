@@ -27,6 +27,13 @@ EventPipe.unregisterByContext(contextName: String)
 EventPipe.send(event: Any, delaySend: Long = 0)
 ```
 
+##### 3. Configure proguard rules.
+- Add package of lib.
+- Add package with Event classes. 
+```
+#EventPipe
+-keep class com.dansdev.libeventpipe.** { *; }
+```
 
 ------------
 

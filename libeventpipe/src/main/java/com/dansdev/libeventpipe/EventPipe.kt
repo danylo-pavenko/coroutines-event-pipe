@@ -1,9 +1,6 @@
 package com.dansdev.libeventpipe
 
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.consumeEach
-import java.util.concurrent.TimeUnit
 import kotlin.coroutines.CoroutineContext
 
 class EventPipe private constructor() : CoroutineScope {
@@ -16,7 +13,7 @@ class EventPipe private constructor() : CoroutineScope {
 
         const val TAG = "EventPipe"
 
-        var instance: EventPipe? = null
+        private var instance: EventPipe? = null
             get() = if (field == null) {
                 field = EventPipe()
                 field
@@ -25,7 +22,12 @@ class EventPipe private constructor() : CoroutineScope {
             }
 
         @ObsoleteCoroutinesApi
-        fun <T> registerEvent(contextName: String, eventDispatcher: CoroutineDispatcher, eventClass: Class<T>, eventCallback: (T) -> Unit) {
+        fun <T> registerEvent(
+            contextName: String,
+            eventDispatcher: CoroutineDispatcher,
+            eventClass: Class<T>,
+            eventCallback: (T) -> Unit
+        ) {
             instance?.registerEvent(contextName, eventDispatcher, eventClass, eventCallback)
         }
 
@@ -33,7 +35,7 @@ class EventPipe private constructor() : CoroutineScope {
         fun send(event: Any, delaySend: Long = 0) {
             if (delaySend > 0) {
                 instance?.launch {
-                    TimeUnit.MILLISECONDS.sleep(delaySend)
+                    delay(delaySend)
                     instance?.send(event)
                 }
             } else {
@@ -60,14 +62,20 @@ class EventPipe private constructor() : CoroutineScope {
         val cloneContextList = mutableMapOf<String, MutableMap<Class<*>, PipeData<*>>>()
         cloneContextList.putAll(contextList)
         for ((_, pipe) in cloneContextList) {
-            pipe.keys.firstOrNull { it == event.javaClass || it == event.javaClass.superclass }.let { key ->
-                pipe[key]?.send(event)
-            }
+            pipe.keys.firstOrNull { it == event.javaClass || it == event.javaClass.superclass }
+                .let { key ->
+                    pipe[key]?.send(event)
+                }
         }
     }
 
     @ObsoleteCoroutinesApi
-    private fun <T> registerEvent(contextName: String, eventDispatcher: CoroutineDispatcher, eventClass: Class<T>, eventCallback: (T) -> Unit) {
+    private fun <T> registerEvent(
+        contextName: String,
+        eventDispatcher: CoroutineDispatcher,
+        eventClass: Class<T>,
+        eventCallback: (T) -> Unit
+    ) {
         val pipeList = if (contextList.containsKey(contextName)) {
             contextList[contextName]!!
         } else {
@@ -101,34 +109,5 @@ class EventPipe private constructor() : CoroutineScope {
             pipe.clear()
         }
         contextList.remove(contextName)
-    }
-}
-
-@ObsoleteCoroutinesApi
-private data class PipeData<T>(
-        val coroutineScope: CoroutineScope,
-        val eventDispatcher: CoroutineDispatcher,
-        val onEvent: (T) -> Unit
-) {
-
-    private val channel = Channel<T>()
-
-    init {
-        coroutineScope.launch {
-            channel.consumeEach { launch(eventDispatcher) { onEvent(it) } }
-        }
-    }
-
-    fun send(event: Any) {
-        if (!channel.isClosedForSend) {
-            TimeUnit.MILLISECONDS.sleep(1)
-            coroutineScope.launch { channel.send(event as T) }
-        } else {
-            System.err.println("${EventPipe.TAG}: Channel is closed for send")
-        }
-    }
-
-    fun cancel() {
-        channel.cancel()
     }
 }
