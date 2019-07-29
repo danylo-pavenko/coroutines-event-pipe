@@ -1,4 +1,5 @@
 ### Library EventPipe similar to EventBus
+[![Android Arsenal](https://img.shields.io/badge/Android%20Arsenal-Coroutines%20Event%20Pipe-brightgreen.svg?style=flat-square)](https://android-arsenal.com/details/1/7797)
 -------------
 
 This library base on [Kotlin Coroutines Channel](https://kotlinlang.org/docs/reference/coroutines/channels.html).
