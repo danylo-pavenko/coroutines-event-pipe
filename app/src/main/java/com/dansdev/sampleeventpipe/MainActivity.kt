@@ -11,7 +11,6 @@ import kotlinx.coroutines.ObsoleteCoroutinesApi
 
 class MainActivity : AppCompatActivity() {
 
-    @ObsoleteCoroutinesApi
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -21,7 +20,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    @ObsoleteCoroutinesApi
     fun onSendEvent(v: View) {
         val data = etData.text.toString()
         EventPipe.send(UpdateTextEvent(data))

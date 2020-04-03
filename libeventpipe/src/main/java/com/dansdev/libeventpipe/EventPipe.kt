@@ -7,7 +7,7 @@ class EventPipe private constructor() : CoroutineScope {
 
     private val job = SupervisorJob()
 
-    override val coroutineContext: CoroutineContext = Dispatchers.Default + job
+    override val coroutineContext: CoroutineContext = Dispatchers.IO + job
 
     companion object {
 
@@ -21,7 +21,6 @@ class EventPipe private constructor() : CoroutineScope {
                 field
             }
 
-        @ObsoleteCoroutinesApi
         fun <T> registerEvent(
             contextName: String,
             eventDispatcher: CoroutineDispatcher,
@@ -31,7 +30,6 @@ class EventPipe private constructor() : CoroutineScope {
             instance?.registerEvent(contextName, eventDispatcher, eventClass, eventCallback)
         }
 
-        @ObsoleteCoroutinesApi
         fun send(event: Any, delaySend: Long = 0) {
             if (delaySend > 0) {
                 instance?.launch {
@@ -43,21 +41,17 @@ class EventPipe private constructor() : CoroutineScope {
             }
         }
 
-        @ObsoleteCoroutinesApi
         fun unregisterAllEvents() {
             instance?.unregisterAllEvent()
         }
 
-        @ObsoleteCoroutinesApi
         fun unregisterByContext(contextName: String) {
             instance?.unregisterByContext(contextName)
         }
     }
 
-    @ObsoleteCoroutinesApi
     private val contextList = mutableMapOf<String, MutableMap<Class<*>, PipeData<*>>>()
 
-    @ObsoleteCoroutinesApi
     private fun send(event: Any) {
         val cloneContextList = mutableMapOf<String, MutableMap<Class<*>, PipeData<*>>>()
         cloneContextList.putAll(contextList)
@@ -69,7 +63,6 @@ class EventPipe private constructor() : CoroutineScope {
         }
     }
 
-    @ObsoleteCoroutinesApi
     private fun <T> registerEvent(
         contextName: String,
         eventDispatcher: CoroutineDispatcher,
@@ -87,9 +80,10 @@ class EventPipe private constructor() : CoroutineScope {
         pipeList[eventClass] = eventData
     }
 
-    @ObsoleteCoroutinesApi
     private fun unregisterAllEvent() {
-        System.out.println("$TAG: unregisterAllEvent()")
+        if (BuildConfig.DEBUG) {
+            System.out.println("$TAG: unregisterAllEvent()")
+        }
         coroutineContext.cancelChildren()
         for ((_, pipe) in contextList) {
             pipe.values.forEach { it.cancel() }
@@ -98,9 +92,10 @@ class EventPipe private constructor() : CoroutineScope {
         contextList.clear()
     }
 
-    @ObsoleteCoroutinesApi
     private fun unregisterByContext(contextName: String) {
-        System.out.println("$TAG: unregisterByContext(context: $contextName)")
+        if (BuildConfig.DEBUG) {
+            System.out.println("$TAG: unregisterByContext(context: $contextName)")
+        }
         val cloneContextList = mutableMapOf<String, MutableMap<Class<*>, PipeData<*>>>()
         cloneContextList.putAll(contextList)
         val pipesInContext = cloneContextList.filter { it.key == contextName }

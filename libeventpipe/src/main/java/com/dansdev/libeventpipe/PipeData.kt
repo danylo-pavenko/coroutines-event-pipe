@@ -1,11 +1,12 @@
 package com.dansdev.libeventpipe
 
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.consumeEach
+import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 
-@ObsoleteCoroutinesApi
 data class PipeData<T>(
     val coroutineScope: CoroutineScope,
     val eventDispatcher: CoroutineDispatcher,
@@ -20,7 +21,6 @@ data class PipeData<T>(
         }
     }
 
-    @ExperimentalCoroutinesApi
     fun send(event: Any) {
         if (!channel.isClosedForSend) {
             TimeUnit.MILLISECONDS.sleep(1)
