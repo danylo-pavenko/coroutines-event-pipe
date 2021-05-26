@@ -1,36 +1,35 @@
 package com.dansdev.libeventpipe
 
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.consumeEach
-import kotlinx.coroutines.launch
-import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.collect
+import kotlin.coroutines.CoroutineContext
 
 data class PipeData<T>(
-    val coroutineScope: CoroutineScope,
     val eventDispatcher: CoroutineDispatcher,
-    val onEvent: (T) -> Unit
-) {
+    val onEvent: suspend (T) -> Unit
+) : CoroutineScope {
 
-    private val channel = Channel<T>()
+    private val sharedFlow = MutableSharedFlow<T>()
+    private val job = Job()
+
+    override val coroutineContext: CoroutineContext
+        get() = job
 
     init {
-        coroutineScope.launch {
-            channel.consumeEach { launch(eventDispatcher) { onEvent(it) } }
+        launch {
+            sharedFlow.collect { launch(eventDispatcher) { onEvent(it) } }
         }
     }
 
     fun send(event: Any) {
-        if (!channel.isClosedForSend) {
-            TimeUnit.MILLISECONDS.sleep(1)
-            coroutineScope.launch { channel.send(event as T) }
-        } else {
-            System.err.println("${EventPipe.TAG}: Channel is closed for send")
+        launch {
+            delay(1)
+            sharedFlow.emit(event as T)
         }
     }
 
     fun cancel() {
-        channel.cancel()
+        job.cancel("Canceled by user")
     }
 }

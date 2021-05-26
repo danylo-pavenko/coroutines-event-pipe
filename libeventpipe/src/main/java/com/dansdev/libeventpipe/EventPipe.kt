@@ -11,6 +11,8 @@ class EventPipe private constructor() : CoroutineScope {
 
     companion object {
 
+        private const val GLOBAL_CONTEXT = "global:app_event_flow"
+
         const val TAG = "EventPipe"
 
         private var instance: EventPipe? = null
@@ -22,12 +24,12 @@ class EventPipe private constructor() : CoroutineScope {
             }
 
         fun <T> registerEvent(
-            contextName: String,
-            eventDispatcher: CoroutineDispatcher,
             eventClass: Class<T>,
-            eventCallback: (T) -> Unit
+            contextName: String = GLOBAL_CONTEXT,
+            eventDispatcher: CoroutineDispatcher = Dispatchers.Main,
+            eventCallback: suspend (event: T) -> Unit
         ) {
-            instance?.registerEvent(contextName, eventDispatcher, eventClass, eventCallback)
+            instance?.registerEvent(eventClass, contextName, eventDispatcher, eventCallback)
         }
 
         fun send(event: Any, delaySend: Long = 0) {
@@ -64,10 +66,10 @@ class EventPipe private constructor() : CoroutineScope {
     }
 
     private fun <T> registerEvent(
+        eventClass: Class<T>,
         contextName: String,
         eventDispatcher: CoroutineDispatcher,
-        eventClass: Class<T>,
-        eventCallback: (T) -> Unit
+        eventCallback: suspend (T) -> Unit
     ) {
         val pipeList = if (contextList.containsKey(contextName)) {
             contextList[contextName]!!
@@ -76,7 +78,7 @@ class EventPipe private constructor() : CoroutineScope {
             contextList[contextName] = eventPipe
             eventPipe
         }
-        val eventData = PipeData(this, eventDispatcher, eventCallback)
+        val eventData = PipeData(eventDispatcher, eventCallback)
         pipeList[eventClass] = eventData
     }
 
