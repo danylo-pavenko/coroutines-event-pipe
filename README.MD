@@ -14,7 +14,7 @@ implementation 'com.github.Daniil-Pavenko:coroutines-event-pipe:2.0.0'
 ###### 2. Methods for using:
 
 - Register event class:
-```
+```kotlin
 EventPipe.registerEvent(
     eventClass: Class<T>,
     contextName: String = GLOBAL_CONTEXT, // default
@@ -23,7 +23,7 @@ EventPipe.registerEvent(
 )
 ```
 - And unregister into `onDestroy` or `onStop` by your logic:
-```
+```kotlin
 EventPipe.unregisterAllEvents() - for all Events
 
 or
@@ -31,14 +31,14 @@ or
 EventPipe.unregisterByContext(contextName: String)
 ```
 - Send event:
-```
+```kotlin
 EventPipe.send(event: Any, delaySend: Long = 0)
 ```
 
 ##### 3. Configure proguard rules.
 - Add package of lib.
 - Add package with Event classes. 
-```
+```kotlin
 #EventPipe
 -keep class com.dansdev.libeventpipe.** { *; }
 ```
